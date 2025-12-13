@@ -8,6 +8,7 @@ const {
 } = require('discord.js')
 
 const Match = require('../../models/Match.js')
+const Team = require('../../models/Team.js')
 
 const config = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
@@ -201,11 +202,14 @@ async function buildDivisionContainers({ division, teams, season, chunkSize = 6 
       })()
 
       async function getMatchesPlayedInSeason(teamId, seasonId) {
-        return await Match.countDocuments({
+        let matchesPlayed = await Match.countDocuments({
           seasonId,
           status: 'played',
           $or: [{ teamAId: teamId }, { teamBId: teamId }]
         })
+        const team = await Team.findById(teamId)
+        if (team.name === 'Dark Sayo') matchesPlayed += 2 // cambiar proximamente
+        return matchesPlayed
       }
 
       async function getMatchesWonInSeason(teamId, seasonId) {
@@ -214,8 +218,10 @@ async function buildDivisionContainers({ division, teams, season, chunkSize = 6 
           status: 'played',
           $or: [{ teamAId: teamId }, { teamBId: teamId }]
         }).select('teamAId teamBId scoreA scoreB')
+        const team = await Team.findById(teamId)
 
         let wins = 0
+        if (team.name === 'Dark Sayo') wins = 2 // cambiar proximamente
         for (const match of matches) {
           const isTeamA = String(match.teamAId) === String(teamId)
           const teamScore = isTeamA ? match.scoreA : match.scoreB

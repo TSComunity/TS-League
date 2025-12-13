@@ -515,45 +515,144 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
   }
 }
 
-const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado' }) => {
-  // Buscar el match
+const cancelMatch = async ({
+  client,
+  matchIndex,
+  seasonIndex,
+  teamAName,
+  teamBName,
+  reason = 'Partido cancelado',
+  freeWin = null // nombre del equipo ganador
+}) => {
+  // 🔹 Buscar match
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
-  if (!match) throw new Error('Partido no encontrado')
+  if (!match) throw new Error('Partido no encontrado.')
 
-  if (match.status === 'cancelled') return
-  if (match.status === 'played') throw new Error('El partido ya está finalizado y no se puede cancelar.')
+  // 🔹 Validaciones
+  if (match.status === 'played') {
+    throw new Error('El partido ya está finalizado y no se puede cancelar.')
+  }
 
-  // Actualizar estado
+  if (freeWin) {
+    const validNames = [match.teamAId.name, match.teamBId.name]
+    if (!validNames.includes(freeWin)) {
+      throw new Error('freeWin debe ser el nombre de uno de los equipos del partido.')
+    }
+  }
+
+  // 🔹 Cancelar
   match.status = 'cancelled'
   match.reason = reason
 
-  const channel = await client.channels.fetch(match.channelId).catch(() => null)
-  if (channel) {
-    await channel.delete('Partido cancelado, limpieza de canal').catch(() => null)
+  // 🔹 Eliminar canal del partido
+  if (match.channelId) {
+    const channel = await client.channels.fetch(match.channelId).catch(() => null)
+    if (channel) {
+      await channel.delete('Partido cancelado, limpieza de canal').catch(() => null)
+    }
+    match.channelId = null
   }
-  match.channelId = null
-  // Guardar cambios
+
+  // 🔹 FREE WIN (opcional)
+  let winner = null
+  let loser = null
+
+  if (freeWin) {
+    const season = await getActiveSeason()
+    if (!season) throw new Error('No hay temporada activa.')
+
+    const division = season.divisions.find(
+      d => d.divisionId._id.toString() === match.divisionId._id.toString()
+    )
+    if (!division) throw new Error('División no encontrada.')
+
+    const teamASeason = division.teams.find(
+      t => t.teamId._id.toString() === match.teamAId._id.toString()
+    )
+    const teamBSeason = division.teams.find(
+      t => t.teamId._id.toString() === match.teamBId._id.toString()
+    )
+
+    const teamA = await Team.findById(match.teamAId).populate('members.userId')
+    const teamB = await Team.findById(match.teamBId).populate('members.userId')
+    if (!teamA || !teamB) throw new Error('Error cargando equipos.')
+
+    winner = teamA.name === freeWin ? teamA : teamB
+    loser  = teamA.name === freeWin ? teamB : teamA
+
+    // 🏆 puntos administrativos (1 set)
+    if (winner._id.toString() === teamA._id.toString()) teamASeason.points += 1
+    else teamBSeason.points += 1
+
+    // 📊 stats de equipo
+    winner.stats.matchesWon += 1
+    loser.stats.matchesLost += 1
+    winner.stats.setsWon += 1
+    loser.stats.setsLost += 1
+
+    // 👤 stats de usuarios
+    const updateMembersStats = async (team, won) => {
+      for (const member of team.members) {
+        const user = member.userId
+        if (!user) continue
+
+        if (won) user.leagueStats.matchesWon += 1
+        else user.leagueStats.matchesLost += 1
+
+        user.leagueStats.setsWon += won ? 1 : 0
+        user.leagueStats.setsLost += won ? 0 : 1
+
+        await user.save()
+      }
+    }
+
+    await updateMembersStats(winner, true)
+    await updateMembersStats(loser, false)
+
+    await teamA.save()
+    await teamB.save()
+    await season.save()
+  }
+
+  // 🔹 Guardar match
   await match.save()
 
-  // Notificar a equipo A
-  if (match.teamAId) {
-    const teamADoc = match.teamAId
-    await sendTeamAnnouncement({
-      client,
-      team: teamADoc,
-      content: `### ${emojis.canceled} Partido cancelado\nVuestro partido programado contra el equipo **${match.teamBId.name}** ha sido cancelado.\n**Motivo:**\n> ${reason}`
-    })
+  // 🔹 Mensajes a AMBOS equipos
+  const isFreeWin = Boolean(freeWin)
+
+  const buildMessage = (selfTeam, rivalTeam) => {
+    if (!isFreeWin) {
+      return `### ❌ Partido cancelado
+El partido contra **${rivalTeam.name}** ha sido cancelado.
+
+**Motivo:**
+> ${reason}`
+    }
+
+    const isWinner = selfTeam.name === freeWin
+
+    return `### 🏆 Victoria administrativa (Free Win)
+El partido contra **${rivalTeam.name}** ha sido cancelado.
+
+${isWinner
+  ? 'Habéis ganado el partido por decisión administrativa.'
+  : `La victoria administrativa ha sido otorgada a **${freeWin}**.`}
+
+**Motivo:**
+> ${reason}`
   }
 
-  // Notificar a equipo B
-  if (match.teamBId) {
-    const teamBDoc = match.teamBId
-    await sendTeamAnnouncement({
-      client,
-      team: teamBDoc,
-      content: `### ${emojis.canceled} Partido cancelado\nVuestro partido programado contra el equipo **${match.teamAId.name}** ha sido cancelado.\n**Motivo:**\n> ${reason}`
-    })
-  }
+  await sendTeamAnnouncement({
+    client,
+    team: match.teamAId,
+    content: buildMessage(match.teamAId, match.teamBId)
+  })
+
+  await sendTeamAnnouncement({
+    client,
+    team: match.teamBId,
+    content: buildMessage(match.teamBId, match.teamAId)
+  })
 
   return match
 }

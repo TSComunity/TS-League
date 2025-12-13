@@ -48,6 +48,10 @@ module.exports = {
             opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
         .addStringOption(opt =>
             opt.setName('motivo').setDescription('Motivo del cancelamiento').setRequired(true))
+        .addStringOption(opt =>
+          opt.setName('equipo-ganador')
+            .setDescription('Nombre del equipo que gana por free win')
+            .setRequired(false))
     )
 
     // /partido establecer-ganador
@@ -182,12 +186,26 @@ module.exports = {
       } else if (sub === 'cancelar') {
         const matchIndex = interaction.options.getInteger('indice-partido')
         const reason = interaction.options.getString('motivo')
+        const freeWinTeamName = interaction.options.getString('equipo-ganador') || null
 
-        const match = await cancelMatch({ client, matchIndex, reason })
-        await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
+        const match = await cancelMatch({
+          client,
+          matchIndex,
+          reason,
+          freeWin: freeWinTeamName
         })
 
+        const isFreeWin = Boolean(freeWinTeamName)
+
+        await interaction.reply({
+          embeds: [
+            getSuccesEmbed({
+              message: isFreeWin
+                ? `Partido cancelado. Victoria administrativa otorgada a **${freeWinTeamName}**.`
+                : `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`
+            })
+          ]
+        })
       } else if (sub === 'establecer-ganador') {
         await interaction.deferReply({ ephemeral: false });
 
