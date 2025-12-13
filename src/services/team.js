@@ -14,10 +14,10 @@ const { findTeam } = require('../utils/team.js')
 const { sendTeamAnnouncement } = require('../discord/send/team.js')
 const { getTeamChannelCreatedEmbed } = require('../discord/embeds/team.js')
 
-const colors = require('../configs/colors.json')
-const config = require('../configs/league.js')
+const colors = require('../config/colors.json')
+const config = require('../config/league.js')
 const maxMembers = config.team.maxMembers
-const emojis = require('../configs/emojis.json')
+const emojis = require('../config/emojis.json')
 
 const checkTeamEligibility = (team) => {
   return team.members.length >= 3 || (team.divisionId !== null && team.divisionId !== undefined)

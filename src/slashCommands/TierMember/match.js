@@ -11,7 +11,7 @@ const { findMatch } = require('../../utils/match.js')
 const { getMatchInfoEmbed } = require('../../discord/embeds/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
-const { commands } = require('../../configs/league.js')
+const { commands } = require('../../config/league.js')
 const ROLES_WITH_PERMS = commands.perms
 
 module.exports = {

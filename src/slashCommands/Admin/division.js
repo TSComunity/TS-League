@@ -3,7 +3,7 @@ const { createDivision, deleteDivision, updateDivision } = require('../../servic
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 const { sendLog } = require('../../discord/send/staff.js')
 
-const colors = require('../../configs/colors.json')
+const colors = require('../../config/colors.json')
 
 module.exports = {
   data: new SlashCommandBuilder()

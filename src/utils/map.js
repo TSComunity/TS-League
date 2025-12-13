@@ -1,4 +1,4 @@
-const gameModes = require('../configs/gameModes.json')
+const gameModes = require('../config/gameModes.json')
 
 /**
  * Devuelve información detallada de un mapa dado su ID

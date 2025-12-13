@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js")
-const configs = require("../../configs/league.js")
+const config = require("../../config/league.js")
 
 async function sendTeamAnnouncement({ client, team, content = 'No se ha recibido ningun contenido.' }) {
   if (!team.channelId) return
@@ -14,7 +14,7 @@ async function sendTeamAnnouncement({ client, team, content = 'No se ha recibido
       .setThumbnail(team.iconURL)
 
     await channel.send({
-      content: `<@&${configs.roles.ping.id}>`,
+      content: `<@&${config.roles.ping.id}>`,
       embeds: [embed],
     })
 

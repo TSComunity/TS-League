@@ -36,7 +36,7 @@ src/
   ├─ discord/            # Botones, menús, modals, embeds, inputs
   ├─ services/           # Lógica de negocio y automatización
   ├─ models/             # Modelos Mongoose: Season, Division, Team, Match, User
-  ├─ configs/            # Configuración, colores, emojis, modos/mapas
+  ├─ config/            # Configuración, colores, emojis, modos/mapas
   ├─ utils/              # Funciones para fechas, imágenes, rounds, etc.
   ├─ handlers/           # Carga modular de eventos y comandos
   ├─ events/             # Listeners para interacciones y mensajes

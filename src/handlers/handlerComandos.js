@@ -1,4 +1,4 @@
-const { guild } = require('../configs/league.js')
+const { guild } = require('../config/league.js')
 
 async function loadCommands(client) {
     const fs = require("node:fs");

@@ -2,8 +2,8 @@ const sharp = require('sharp')
 const { uploadToImgBB } = require('../utils/canvas.js')
 const { getActiveSeason } = require('../utils/season.js')
 
-const gameModes = require('../configs/gameModes.json')
-const configs = require('../configs/league.js')
+const gameModes = require('../config/gameModes.json')
+const config = require('../config/league.js')
 
 /**
  * Selecciona sets aleatorios (modo + mapa) que aún no se han jugado en la jornada anterior.
@@ -11,7 +11,7 @@ const configs = require('../configs/league.js')
  * @returns {Object} sets - los sets elegidos.
  */
 const generateRandomSets = async () => {
-  const defaultSetsLength = configs.match.defaultSetsLength
+  const defaultSetsLength = config.match.defaultSetsLength
   const season = await getActiveSeason()
 
   // Mapas ya usados EN LA JORNADA ANTERIOR

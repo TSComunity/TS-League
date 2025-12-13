@@ -16,12 +16,12 @@ const { sendTeamAnnouncement } = require('../discord/send/team.js')
 const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 
-const { round, roles, division } = require('../configs/league.js')
+const { round, roles, division } = require('../config/league.js')
 const { startDay, startHour } = round
 const { maxTeams } = division
-const emojis = require('../configs/emojis.json')
+const emojis = require('../config/emojis.json')
 const { GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js')
-const { guild } = require('../configs/league.js')
+const { guild } = require('../config/league.js')
 
 const calculatePromotionRelegation = async ({ client, season, updateDb = true } = {}) => {
   if (!season || !Array.isArray(season.divisions)) {
@@ -357,7 +357,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
           scheduledStartTime: new Date(Date.now() + 5 * 1000),
           privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly, // Public si quieres que cualquiera vea el evento
           entityType: GuildScheduledEventEntityType.StageInstance,
-          channel: configs.channels.stage.id,
+          channel: config.channels.stage.id,
           description,
           image: imageBase64
         });

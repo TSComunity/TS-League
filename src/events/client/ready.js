@@ -1,10 +1,10 @@
 require('dotenv').config();
 const { ActivityType } = require('discord.js');
 const mongoose = require('mongoose');
-const { MONGODB_URL } = require('../../configs/configs.js')
+const { MONGODB_URL } = require('../../config/config.js')
 const wait = require('node:timers/promises').setTimeout;
 var colors = require('colors');
-const emojis = require('../../configs/emojis.json');
+const emojis = require('../../config/emojis.json');
 
 module.exports = {
     name: "clientReady",

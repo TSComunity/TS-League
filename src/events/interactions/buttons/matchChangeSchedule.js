@@ -1,7 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 
 const Match = require('../../../models/Match.js')
-const configs = require('../../../configs/league.js')
+const config = require('../../../config/league.js')
 
 const { checkTeamUserIsLeader } = require('../../../services/team.js')
 const { checkDeadline } = require('../../../utils/date.js')

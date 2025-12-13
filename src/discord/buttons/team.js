@@ -1,5 +1,5 @@
 const { ButtonBuilder, ButtonStyle } = require('discord.js')
-const emojis = require('../../configs/emojis.json')
+const emojis = require('../../config/emojis.json')
 
 const getTeamCreateButton = () => {
     return new ButtonBuilder()

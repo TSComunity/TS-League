@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
-const emojis = require("../../configs/emojis.json")
-const configs = require('../../configs/league.js')
+const emojis = require("../../config/emojis.json")
+const config = require('../../config/league.js')
 
 function safe(v) {
   return (v === undefined || v === null || String(v) === "") ? "\u200B" : String(v)
@@ -41,7 +41,7 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
 
 
   const freeAgentText = isFreeAgent
-    ? ` — Agente Libre\n> Usa el botón **Buscar Equipo** de <#${configs.channels.register.id}> para activar o desactivar el estado de agente libre.`
+    ? ` — Agente Libre\n> Usa el botón **Buscar Equipo** de <#${config.channels.register.id}> para activar o desactivar el estado de agente libre.`
     : ""
   embed.setDescription(`### <@${user.discordId}>${freeAgentText}`.trim() || "\u200B")
 

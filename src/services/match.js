@@ -15,10 +15,10 @@ const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('
 
 const { getMatchInfoEmbed, getOnGoingMatchEmbed, getMatchResultsEmbed } = require('../discord/embeds/match.js')
 
-const { guild: guildConfig, channels, roles, match: matchConfig } = require('../configs/league.js')
-const emojis = require('../configs/emojis.json')
+const { guild: guildConfig, channels, roles, match: matchConfig } = require('../config/league.js')
+const emojis = require('../config/emojis.json')
 
-const { BRAWL_STARS_API_KEY } = require('../configs/configs.js')
+const { BRAWL_STARS_API_KEY } = require('../config/config.js')
 
 async function updatePermissionsForMatch({ client, match }) {
   if (!match || !client || !match?.channelId) return { ok: false, reason: 'no match or client or channelId' };
@@ -631,7 +631,7 @@ El partido contra **${rivalTeam.name}** ha sido cancelado.
 
     const isWinner = selfTeam.name === freeWin
 
-    return `### ${emojis} ${isWinner ? 'Victoria administrativa (Free Win)' : 'Derrota administrativa'}\n${isWinner ? `Habéis ganado el partido por decision administrativa, ya que vuestro partido contra **${rivalTeam.name}** ha sido cancelado.` : `La victoria administrativa ha sido otorgada a **${freeWin}**.\n\n**Motivo:** ${reason}` }`
+    return `### ${emojis.ended} ${isWinner ? 'Victoria administrativa (Free Win)' : 'Derrota administrativa'}\n${isWinner ? `Habéis ganado el partido por decision administrativa, ya que vuestro partido contra **${rivalTeam.name}** ha sido cancelado.` : `La victoria administrativa ha sido otorgada a **${freeWin}**.\n\n**Motivo:** ${reason}` }`
   }
 
   await sendTeamAnnouncement({

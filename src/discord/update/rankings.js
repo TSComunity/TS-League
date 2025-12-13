@@ -10,8 +10,8 @@ const {
 const Match = require('../../models/Match.js')
 const Team = require('../../models/Team.js')
 
-const config = require('../../configs/league.js')
-const emojis = require('../../configs/emojis.json')
+const config = require('../../config/league.js')
+const emojis = require('../../config/emojis.json')
 
 const { calculatePromotionRelegation } = require('../../services/season.js')
 const { getLastSeason } = require('../../utils/season.js')

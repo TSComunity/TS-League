@@ -10,7 +10,7 @@ const {
   EmbedBuilder
 } = require('discord.js');
 
-const emojis = require('../../configs/emojis.json')
+const emojis = require('../../config/emojis.json')
 
 const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], winner = [], finishedBefore = false }) => {
   // division puede ser { divisionId: <doc> } o directamente el doc

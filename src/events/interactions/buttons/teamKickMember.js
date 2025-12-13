@@ -7,7 +7,7 @@ const { getTeamKickMemberMenu } = require('../../../discord/menus/team.js')
 const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getUserDisplayName } = require('../../../services/user.js')
 
-const emojis = require('../../../configs/emojis.json')
+const emojis = require('../../../config/emojis.json')
 
 module.exports = {
   customId: 'teamKickMember',

@@ -17,8 +17,8 @@ const { getTeamInfoEmbed } = require('../../discord/embeds/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 const { sendLog } = require('../../discord/send/staff.js')
 
-const colors = require('../../configs/colors.json')
-const { commands } = require('../../configs/league.js')
+const colors = require('../../config/colors.json')
+const { commands } = require('../../config/league.js')
 const ROLES_WITH_PERMS = commands.perms
 
 module.exports = {

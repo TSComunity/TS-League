@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
-const { channels, guild } = require('../../configs/league.js');
+const { channels, guild } = require('../../config/league.js');
 const { logs } = channels;
-const emojis = require('../../configs/emojis.json')
+const emojis = require('../../config/emojis.json')
 
 const EMOJI_MAP = {
   season: { emoji: emojis.season, footer: 'Evento de Temporada' },

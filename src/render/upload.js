@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { IMGBB_API_KEY } = require('../configs/configs.js')
+const { IMGBB_API_KEY } = require('../config/config.js')
 
 async function uploadToImgBB(buffer) {
   try {

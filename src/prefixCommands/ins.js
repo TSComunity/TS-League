@@ -13,7 +13,7 @@ const {
   getTeamLookingFotButton
 } = require('../discord/buttons/team.js');
 
-const emojis = require('../configs/emojis.json');
+const emojis = require('../config/emojis.json');
 
 module.exports = {
   name: 'ins',

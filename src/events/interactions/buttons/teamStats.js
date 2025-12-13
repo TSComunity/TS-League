@@ -5,7 +5,7 @@ const { getUserBrawlData } = require('../../../utils/user.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamStatsEmbed } = require('../../../discord/embeds/team.js')
 const { getTeamStatsMenu } = require('../../../discord/menus/team.js')
-const emojis = require('../../../configs/emojis.json')
+const emojis = require('../../../config/emojis.json')
 
 module.exports = {
   condition: (id) => id.startsWith('teamStatsButton'),

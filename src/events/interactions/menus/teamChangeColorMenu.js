@@ -15,7 +15,7 @@ const {
     getTeamReGenerateCodeButton
 } = require('../../../discord/buttons/team.js')
 
-const colors = require('../../../configs/colors.json')
+const colors = require('../../../config/colors.json')
 
 module.exports = {
   customId: 'teamChangeColorMenu',

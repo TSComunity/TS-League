@@ -1,6 +1,6 @@
 const Division = require('../models/Division.js')
 const Team = require('../models/Team.js')
-const { division } = require('../configs/league.js')
+const { division } = require('../config/league.js')
 
 /**
  * Crea una nueva división si el nombre y el tier no están en uso.

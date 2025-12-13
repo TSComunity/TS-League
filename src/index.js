@@ -6,7 +6,7 @@ const { loadEvents } = require('./handlers/handlerEventos.js')
 const { loadCommands } = require('./handlers/handlerComandos.js')
 const { loadPrefix } = require('./handlers/handlerComandosPrefix.js')
 
-const { TOKEN } = require('./configs/configs.js')
+const { TOKEN } = require('./config/config.js')
 
 const wait = require('node:timers/promises').setTimeout
 const { sendLog } = require('./discord/send/staff.js');

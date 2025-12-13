@@ -9,9 +9,9 @@ const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed, getDivisionRoundAddedEmbed } = require('../discord/embeds/division.js')
 
-const { season: seasonConfig, round, roles, guild } = require('../configs/league.js')
+const { season: seasonConfig, round, roles, guild } = require('../config/league.js')
 const { maxRounds } = seasonConfig
-const emojis = require('../configs/emojis.json')
+const emojis = require('../config/emojis.json')
 const { startDay, startHour } = round
 
 const skipRound = async () => {

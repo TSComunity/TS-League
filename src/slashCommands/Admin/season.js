@@ -6,8 +6,8 @@ const Season = require('../../models/Season.js');
 const fs = require('fs');
 const path = require('path');
 const { GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require('discord.js');
-const emojis = require('../../configs/emojis.json');
-const configs = require('../../configs/league.js')
+const emojis = require('../../config/emojis.json');
+const config = require('../../config/league.js')
 const Match = require('../../models/Match.js');
 const ScheduledFunction = require('../../models/ScheduledFunction.js');
 
@@ -110,7 +110,7 @@ module.exports = {
       //     scheduledStartTime: new Date(Date.now() + 5 * 1000),
       //     privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
       //     entityType: GuildScheduledEventEntityType.StageInstance,
-      //     channel: configs.channels.stage.id,
+      //     channel: config.channels.stage.id,
       //     description,
       //     image: imageBase64
       //   });

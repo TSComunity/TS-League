@@ -4,31 +4,31 @@
 // - deadline → ocurrencia de ESTA SEMANA (lunes-domingo). Si ya pasó → la de la próxima semana.
 
 const { DateTime } = require('luxon')
-const configs = require('../configs/league.js')
+const config = require('../config/league.js')
 
 // ------------------------------------------------------
 // Validación de configuración base
 // ------------------------------------------------------
-function validateConfigs() {
-  if (!configs || !configs.match) throw new Error('configs.match no está definido')
-  const m = configs.match
+function validateconfig() {
+  if (!config || !config.match) throw new Error('config.match no está definido')
+  const m = config.match
   if (!Number.isInteger(m.deadlineDay) || m.deadlineDay < 0 || m.deadlineDay > 6)
-    throw new Error(`configs.match.deadlineDay inválido (${m.deadlineDay}). Debe ser 0..6 (0=domingo).`)
+    throw new Error(`config.match.deadlineDay inválido (${m.deadlineDay}). Debe ser 0..6 (0=domingo).`)
   if (!Number.isInteger(m.deadlineHour) || m.deadlineHour < 0 || m.deadlineHour > 23)
-    throw new Error(`configs.match.deadlineHour inválido (${m.deadlineHour}). Debe ser 0..23.`)
+    throw new Error(`config.match.deadlineHour inválido (${m.deadlineHour}). Debe ser 0..23.`)
   if (!Number.isInteger(m.deadlineMinute) || m.deadlineMinute < 0 || m.deadlineMinute > 59)
-    throw new Error(`configs.match.deadlineMinute inválido (${m.deadlineMinute}). Debe ser 0..59.`)
+    throw new Error(`config.match.deadlineMinute inválido (${m.deadlineMinute}). Debe ser 0..59.`)
 
   if (m.defaultStartDays) {
     if (!Array.isArray(m.defaultStartDays) || m.defaultStartDays.some(d => !Number.isInteger(d) || d < 0 || d > 6))
-      throw new Error('configs.match.defaultStartDays debe ser Array de enteros 0..6 (0=domingo).')
+      throw new Error('config.match.defaultStartDays debe ser Array de enteros 0..6 (0=domingo).')
   }
 }
 
 // ------------------------------------------------------
 // Helpers: mapeo de días
 // Luxon: weekday = 1 (lunes) .. 7 (domingo)
-// Configs: 0=domingo .. 6=sábado
+// config: 0=domingo .. 6=sábado
 // ------------------------------------------------------
 function luxonWeekdayToIndex(luxonWeekday) {
   return luxonWeekday % 7 // domingo(7)->0, lunes(1)->1, ..., sábado(6)->6
@@ -134,7 +134,7 @@ function getDate({ day, hour = 0, minute = 0 }, now = new Date()) {
 // - defaultDate = próxima ocurrencia futura entre defaultStartDays.
 // ------------------------------------------------------
 function checkDeadline(match, now = new Date()) {
-  validateConfigs();
+  validateconfig();
 
   if (match?.scheduledAt) {
     return {
@@ -145,7 +145,7 @@ function checkDeadline(match, now = new Date()) {
   }
 
   const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid');
-  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match;
+  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = config.match;
 
   // Lunes de esta semana (weekday=1)
   const monday = dtNow.set({ weekday: 1 }).startOf('day');

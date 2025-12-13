@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
-const emojis = require('../../configs/emojis.json')
+const emojis = require('../../config/emojis.json')
 
 const getErrorEmbed = ({ error = 'No se recibieron detalles del error.' }) => {
   return (

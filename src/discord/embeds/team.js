@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
-const config  = require('../../configs/league.js')
-const emojis = require('../../configs/emojis.json')
+const config  = require('../../config/league.js')
+const emojis = require('../../config/emojis.json')
 
 const getTeamInfoEmbed = ({ team, perms }) => {
 

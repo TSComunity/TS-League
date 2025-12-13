@@ -5,7 +5,7 @@ const {
   ButtonStyle,
 } = require("discord.js");
 
-const emojis = require("../configs/emojis.json");
+const emojis = require("../config/emojis.json");
 
 module.exports = {
   name: "infoMsg",

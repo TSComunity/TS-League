@@ -6,7 +6,7 @@ const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/manag
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 const { sendLog } = require('../../../discord/send/staff.js')
 
-const emojis = require('../../../configs/emojis.json')
+const emojis = require('../../../config/emojis.json')
 
 const {
     getTeamLeftButton,

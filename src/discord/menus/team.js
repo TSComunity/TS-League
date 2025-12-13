@@ -1,5 +1,5 @@
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js')
-const colors = require('../../configs/colors.json')
+const colors = require('../../config/colors.json')
 
 const getTeamChangeColorMenu = () => {
   return new StringSelectMenuBuilder()

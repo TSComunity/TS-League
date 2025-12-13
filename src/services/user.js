@@ -5,7 +5,7 @@ const User = require('../models/User.js')
 const { sendLog } = require('../discord/send/staff.js')
 const { getUserBrawlData } = require('../utils/user.js')
 const { getUserStatsEmbed } = require('../discord/embeds/user.js')
-const { roles, guild: configGuild, channels } = require('../configs/league.js')
+const { roles, guild: configGuild, channels } = require('../config/league.js')
 
 const checkUserIsVerified = async ({ discordId }) => {
   const user = await User.findOne({ discordId })

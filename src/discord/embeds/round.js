@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
-const emojis = require('../../configs/emojis.json')
-const gameModes = require('../../configs/gameModes.json')
+const emojis = require('../../config/emojis.json')
+const gameModes = require('../../config/gameModes.json')
 
 const getRoundAddedEmbed = ({ divisionsWithNewRounds, season, nextRoundIndex }) => {
     const { name, seasonIndex } = season

@@ -1,4 +1,4 @@
-const { BRAWL_STARS_API_KEY } = require('../configs/configs.js')
+const { BRAWL_STARS_API_KEY } = require('../config/config.js')
 
 function getUserBrawlData({ brawlId }) {
   return fetch(`https://api.brawlstars.com/v1/players/${encodeURIComponent(brawlId)}`, {

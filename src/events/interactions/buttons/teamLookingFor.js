@@ -8,8 +8,8 @@ const { getUserVerifyModal } = require('../../../discord/modals/user.js')
 const { getUserBrawlIdInput } = require('../../../discord/inputs/user.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 
-const configs = require('../../../configs/league.js')
-const emojis = require('../../../configs/emojis.json')
+const config = require('../../../config/league.js')
+const emojis = require('../../../config/emojis.json')
 
 // Cooldown Map
 const cooldowns = new Map()
@@ -56,8 +56,8 @@ module.exports = {
             // Toggle agente libre
             const newStatus = await toggleFreeAgent({ client, discordId })
             const statusText = newStatus.isFreeAgent
-                ? `Se ha activado tu estado de agente libre, se ha enviado un mensaje a <#${configs.channels.freeAgents.id}> con información actualizada cada 15 minutos de tu perfil de Brawl Stars.`
-                : `Se ha desactivado tu estado de agente libre, tu mensaje buscando equipo de <#${configs.channels.freeAgents.id}> ha sido eliminado.`
+                ? `Se ha activado tu estado de agente libre, se ha enviado un mensaje a <#${config.channels.freeAgents.id}> con información actualizada cada 15 minutos de tu perfil de Brawl Stars.`
+                : `Se ha desactivado tu estado de agente libre, tu mensaje buscando equipo de <#${config.channels.freeAgents.id}> ha sido eliminado.`
 
             return interaction.reply({
                 ephemeral: true,

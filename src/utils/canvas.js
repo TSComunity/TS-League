@@ -2,7 +2,7 @@ const { createCanvas, loadImage } = require('canvas')
 const fs = require('node:fs')
 const path = require('node:path')
 const axios = require('axios')
-const { IMGBB_API_KEY } = require('../configs/configs.js')
+const { IMGBB_API_KEY } = require('../config/config.js')
 
 /**
  * Sube el buffer a ImgBB y devuelve la URL pública.

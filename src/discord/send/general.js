@@ -1,5 +1,5 @@
 const { MessageFlags } = require('discord.js')
-const { channels } = require('../../configs/league.js')
+const { channels } = require('../../config/league.js')
 const { announcements } = channels
 
 /**

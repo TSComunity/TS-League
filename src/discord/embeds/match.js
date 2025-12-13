@@ -9,8 +9,8 @@ const {
 } = require('discord.js')
 const { generateMapCollage } = require('../../services/sets.js')
 const { getMatchChangeScheduleButton } = require('../buttons/match.js')
-const emojis = require('../../configs/emojis.json')
-const modesData = require('../../configs/gameModes.json')
+const emojis = require('../../config/emojis.json')
+const modesData = require('../../config/gameModes.json')
 
 /**
  * Genera el embed/container con info completa de un match
