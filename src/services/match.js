@@ -631,15 +631,7 @@ El partido contra **${rivalTeam.name}** ha sido cancelado.
 
     const isWinner = selfTeam.name === freeWin
 
-    return `### 🏆 Victoria administrativa (Free Win)
-El partido contra **${rivalTeam.name}** ha sido cancelado.
-
-${isWinner
-  ? 'Habéis ganado el partido por decisión administrativa.'
-  : `La victoria administrativa ha sido otorgada a **${freeWin}**.`}
-
-**Motivo:**
-> ${reason}`
+    return `### ${emojis} ${isWinner ? 'Victoria administrativa (Free Win)' : 'Derrota administrativa'}\n${isWinner ? `Habéis ganado el partido por decision administrativa, ya que vuestro partido contra **${rivalTeam.name}** ha sido cancelado.` : `La victoria administrativa ha sido otorgada a **${freeWin}**.\n\n**Motivo:** ${reason}` }`
   }
 
   await sendTeamAnnouncement({

@@ -184,6 +184,8 @@ module.exports = {
         })
 
       } else if (sub === 'cancelar') {
+        await interaction.deferReply()
+
         const matchIndex = interaction.options.getInteger('indice-partido')
         const reason = interaction.options.getString('motivo')
         const freeWinTeamName = interaction.options.getString('equipo-ganador') || null
@@ -197,7 +199,7 @@ module.exports = {
 
         const isFreeWin = Boolean(freeWinTeamName)
 
-        await interaction.reply({
+        await interaction.editReply({
           embeds: [
             getSuccesEmbed({
               message: isFreeWin
