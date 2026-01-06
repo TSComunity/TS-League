@@ -9,6 +9,9 @@ const { GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = requi
 const emojis = require('../../config/emojis.json');
 const config = require('../../config/league.js')
 const Match = require('../../models/Match.js');
+const Team = require('../../models/Team.js');
+const { addRound } = require('../../services/round.js');
+const { getActiveSeason } = require('../../utils/season.js');
 const ScheduledFunction = require('../../models/ScheduledFunction.js');
 
 module.exports = {
@@ -39,6 +42,11 @@ module.exports = {
     // )
     .addSubcommand(sub =>
       sub
+        .setName('solve-match')
+        .setDescription('s')
+    )
+    .addSubcommand(sub =>
+      sub
         .setName('agreglar-sets')
         .setDescription('Agrega sets aleatorios a la última ronda de cada división que no los tenga (uso de emergencia)')
     ),
@@ -67,12 +75,78 @@ module.exports = {
       }
 
       // ---------- NUEVOS ----------
-      else if (subcomand === 'datos') {
-        const scheduledEvents = await ScheduledFunction.find({}).lean()
-        await interaction.reply({
-          content: '```json\n' + JSON.stringify(scheduledEvents, null, 2) + '\n```'
-        });
-      }
+else if (subcomand === 'datos') {
+  // 1. Eliminar matches incorrectos (idempotente)
+  const deleteMatchesResult = await Match.deleteMany({
+    matchIndex: { $in: [31, 32] }
+  })
+
+  // 2. Limitar rondas hasta la 8
+  const season = await getActiveSeason()
+
+  let removedRoundsCount = 0
+
+  for (const division of season.divisions) {
+    const before = division.rounds.length
+    division.rounds = division.rounds.filter(r => r.roundIndex <= 8)
+    removedRoundsCount += before - division.rounds.length
+  }
+
+  await season.save()
+
+  // 3. Eliminar UNA ScheduledFunction cualquiera
+  const deletedScheduledFunction = await ScheduledFunction.findOneAndDelete({})
+
+  // 4. Obtener ScheduledFunctions restantes
+  const scheduledFunctions = await ScheduledFunction.find()
+
+  const json = JSON.stringify(
+    scheduledFunctions.map(f => f.toObject()),
+    null,
+    2
+  )
+
+  // 5. Respuesta de verificación
+  await interaction.reply({
+    content:
+`✅ **Limpieza completada correctamente**
+
+🗑️ Matches eliminados: **${deleteMatchesResult.deletedCount}**
+📆 Rondas eliminadas (>8): **${removedRoundsCount}**
+⏱️ ScheduledFunction eliminada: **${deletedScheduledFunction ? 'Sí' : 'No había ninguna'}**
+
+📄 **ScheduledFunctions actuales**
+\`\`\`json
+${json}
+\`\`\``
+  })
+}
+
+else if (subcomand === 'solve-match') {
+  // 1. Buscar el equipo Aurix
+const teamAurix = await Team.findOne({ name: 'Aurix' })
+
+if (!teamAurix) {
+  return interaction.reply('❌ No se encontró el equipo "Aurix"')
+}
+
+// 2. Actualizar el teamA del match con index 28
+const updatedMatch = await Match.findOneAndUpdate(
+  { matchIndex: 28 },
+  { teamAId: teamAurix._id },
+  { new: true }
+)
+
+if (!updatedMatch) {
+  return interaction.reply('❌ No se encontró el partido con matchIndex 28')
+}
+
+// 3. Confirmación
+await interaction.reply(
+  `✅ El **teamA** del partido **#28** ha sido actualizado a **Aurix** correctamente`
+)
+
+}
 
       // else if (subcomand === 'crear-evento') {
       //   const season = await Season.findOne({ status: 'active' }).populate('divisions.divisionId');

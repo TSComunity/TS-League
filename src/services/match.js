@@ -581,14 +581,14 @@ const cancelMatch = async ({
     loser  = teamA.name === freeWin ? teamB : teamA
 
     // 🏆 puntos administrativos (1 set)
-    if (winner._id.toString() === teamA._id.toString()) teamASeason.points += 1
-    else teamBSeason.points += 1
+    if (winner._id.toString() === teamA._id.toString()) teamASeason.points += 2
+    else teamBSeason.points += 2
 
     // 📊 stats de equipo
     winner.stats.matchesWon += 1
     loser.stats.matchesLost += 1
-    winner.stats.setsWon += 1
-    loser.stats.setsLost += 1
+    winner.stats.setsWon += 2
+    loser.stats.setsLost += 2
 
     // 👤 stats de usuarios
     const updateMembersStats = async (team, won) => {
