@@ -31,7 +31,8 @@ let UserSchema = new Schema({
 
     isVerified: { type: Boolean, default: false },
     isFreeAgent: { type: Boolean, default: false },
-    freeAgentMessageId: { type: String }
+    freeAgentMessageId: { type: String },
+    freeAgentExpiresAt: { type: Date }
 })
 
 module.exports = model("User", UserSchema)

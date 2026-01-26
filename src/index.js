@@ -65,8 +65,6 @@ client.login(TOKEN).then(() => {
 
 module.exports = client
 
-// Logica de la liga
-
 const { updateRankingsEmbed } = require('./discord/update/rankings.js')
 const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
@@ -96,14 +94,14 @@ client.once('clientReady', () => {
   runInterval(
     [
       () => processScheduledMatches({ client }),
-      () => monitorOnGoingMatches({ client })
+      () => monitorOnGoingMatches({ client }),
+      () => updateRankingsEmbed({ client })
     ],
     1000 * 60 // 1 min
   )
 
   runInterval(
     [
-      () => updateRankingsEmbed({ client }),
       () => updateDivisionsEmbed({ client }),
       () => executeDueScheduledFunctions({ client }),
       () => applyDefaultDates({ client })
