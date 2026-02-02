@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js')
 const Team = require('../models/Team.js')
 const User = require('../models/User.js')
 
@@ -221,6 +221,19 @@ async function toggleFreeAgent({ client, discordId }) {
   return user
 }
 
+async function sendDM(client, discordId, payload) {
+  try {
+    const user = await client.users.fetch(discordId)
+    if (!user) return false
+    await user.send(payload)
+    return true
+  } catch (err) {
+    if (err?.code === 50007) return false
+    console.warn(`No se pudo enviar MD a ${discordId}:`, err.code ?? err)
+    return false
+  }
+}
+
 async function syncFreeAgents({ client }) {
   const channel = await client.channels.fetch(channels.freeAgents.id)
   if (!channel || !channel.isTextBased()) {
@@ -230,91 +243,95 @@ async function syncFreeAgents({ client }) {
   const users = await User.find({})
 
   for (const user of users) {
-    // 1️⃣ Si tiene equipo → limpiar TODO
+    if (!user.isFreeAgent) continue
+    /* =================================================
+     * 1️⃣ USER CON EQUIPO → SOLO SI ERA FREE AGENT
+     * ================================================= */
     if (user.teamId) {
-      try {
-        if (user.freeAgentMessageId) {
-          const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
-          if (msg) await msg.delete()
-        }
+      const wasFreeAgent = user.isFreeAgent || user.freeAgentMessageId
+      if (!wasFreeAgent) continue
 
-        const dm = await client.users.fetch(user.discordId).catch(() => null)
-        if (dm) {
-          await dm.send({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle('Estado de agente libre actualizado')
-                .setDescription(
-                  `Tu estado de **agente libre** ha sido retirado automáticamente porque ahora formas parte de un equipo.\n\n` +
-                  `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.`
-                )
-                .setColor(0x2ECC71)
-            ]
-          })
-        }
-      } catch (e) {
-        console.error("Error limpiando free agent tras entrar en equipo:", e)
+      // Eliminar mensaje
+      if (user.freeAgentMessageId) {
+        const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+        if (msg) await msg.delete()
       }
 
+      // Limpiar estado
       user.isFreeAgent = false
       user.freeAgentMessageId = null
       user.freeAgentExpiresAt = null
       await user.save()
+
+      // MD opcional
+      await sendDM(client, user.discordId, {
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('Estado de agente libre actualizado')
+            .setDescription(
+              `Tu estado de **agente libre** ha sido retirado automáticamente porque ahora formas parte de un equipo.\n\n` +
+              `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.`
+            )
+            .setColor(0x2ECC71)
+        ]
+      })
+
       continue
     }
 
-    // 2️⃣ Guard: freeAgent activo sin expiresAt → expirar YA
+    /* ======================================================
+     * 2️⃣ GUARD: FREE AGENT ACTIVO SIN expiresAt → EXPIRA YA
+     * ====================================================== */
     if (user.isFreeAgent && !user.freeAgentExpiresAt) {
       user.freeAgentExpiresAt = new Date()
       await user.save()
     }
 
-    if (!user.isFreeAgent) continue
-
-    // 3️⃣ Expirado
+    /* =========================
+     * 3️⃣ FREE AGENT EXPIRADO
+     * ========================= */
     if (user.freeAgentExpiresAt <= new Date()) {
-      try {
-        if (user.freeAgentMessageId) {
-          const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
-          if (msg) await msg.delete()
-        }
-
-        const dm = await client.users.fetch(user.discordId).catch(() => null)
-        if (dm) {
-          const renewButton = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId('userRenewFreeAgent')
-              .setLabel('Renovar Agente Libre')
-              .setStyle(ButtonStyle.Primary)
-              .setEmoji('🔍')
-          )
-
-          await dm.send({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle('Estado de agente libre expirado')
-                .setDescription(
-                  `Tu estado de **agente libre** ha expirado tras **7 días** sin unirte a ningún equipo.\n\n` +
-                  `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.\n\n` +
-                  `Puedes renovarlo usando el botón inferior.`
-                )
-                .setColor(0xE67E22)
-            ],
-            components: [renewButton]
-          })
-        }
-      } catch (e) {
-        console.error("Error al expirar free agent:", e)
+      // Eliminar mensaje
+      if (user.freeAgentMessageId) {
+        const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+        if (msg) await msg.delete()
       }
 
+      // Limpiar estado
       user.isFreeAgent = false
       user.freeAgentMessageId = null
       user.freeAgentExpiresAt = null
       await user.save()
+
+      // MD opcional
+      const renewButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('userRenewFreeAgent')
+          .setLabel('Renovar Agente Libre')
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji('🔍')
+      )
+
+      await sendDM(client, user.discordId, {
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('Estado de agente libre expirado')
+            .setDescription(
+              `Tu estado de **agente libre** ha expirado tras **7 días** sin unirte a ningún equipo.\n\n` +
+              `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.\n\n` +
+              `Puedes renovarlo usando el botón inferior.`
+            )
+            .setColor(0xE67E22)
+        ],
+        components: [renewButton]
+      })
+
       continue
     }
 
-    // 4️⃣ Sigue activo → sync embed
+    /* ==============================
+     * 4️⃣ FREE AGENT ACTIVO → SYNC
+     * ============================== */
     let data = null
     if (user.brawlId) {
       data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
@@ -335,15 +352,24 @@ async function syncFreeAgents({ client }) {
     )
 
     if (!user.freeAgentMessageId) {
-      const msg = await channel.send({ embeds: [embed], components: [contactButton] })
+      const msg = await channel.send({
+        embeds: [embed],
+        components: [contactButton]
+      })
       user.freeAgentMessageId = msg.id
       await user.save()
     } else {
       const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
       if (msg) {
-        await msg.edit({ embeds: [embed], components: [contactButton] })
+        await msg.edit({
+          embeds: [embed],
+          components: [contactButton]
+        })
       } else {
-        const newMsg = await channel.send({ embeds: [embed], components: [contactButton] })
+        const newMsg = await channel.send({
+          embeds: [embed],
+          components: [contactButton]
+        })
         user.freeAgentMessageId = newMsg.id
         await user.save()
       }
