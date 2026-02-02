@@ -154,18 +154,23 @@ const getUserDisplayName = async ({ guild, discordId }) => {
   }
 }
 
+const FREE_AGENT_DURATION_MS = 7 * 24 * 60 * 60 * 1000
+
 /**
  * Toggle Free Agent status (cuando el user pulsa botón)
- * @param {Client} client - Discord client
- * @param {User} user - Documento del usuario en Mongo
  */
 async function toggleFreeAgent({ client, discordId }) {
   if (!client || !discordId) throw new Error("Faltan datos: client o discordId.")
-  const user = await User.findOne({ discordId })
-  const channel = await client.channels.fetch(channels.freeAgents.id)
-  if (!channel || !channel.isTextBased()) throw new Error("Canal de agente libres no encontrado.")
 
-  // Si ya está marcado como agente libre
+  const user = await User.findOne({ discordId })
+  if (!user) throw new Error("Usuario no encontrado.")
+
+  const channel = await client.channels.fetch(channels.freeAgents.id)
+  if (!channel || !channel.isTextBased()) {
+    throw new Error("Canal de agentes libres no encontrado.")
+  }
+
+  // DESACTIVAR FREE AGENT
   if (user.isFreeAgent) {
     try {
       if (user.freeAgentMessageId) {
@@ -178,28 +183,43 @@ async function toggleFreeAgent({ client, discordId }) {
 
     user.isFreeAgent = false
     user.freeAgentMessageId = null
+    user.freeAgentExpiresAt = null
     await user.save()
     return user
   }
 
-  // Si no estaba → crear mensaje con stats
+  // ACTIVAR FREE AGENT
   let data = null
   if (user.brawlId) {
     data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
   }
 
-  const embed = await getUserStatsEmbed({ client, user, data, isFreeAgent: true })
+  const embed = await getUserStatsEmbed({
+    client,
+    user,
+    data,
+    isFreeAgent: true
+  })
 
-  const msg = await channel.send({ embeds: [embed] })
+  const contactButton = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel('Contactar')
+      .setStyle(ButtonStyle.Link)
+      .setURL(`https://discord.com/users/${user.discordId}`)
+  )
+
+  const msg = await channel.send({
+    embeds: [embed],
+    components: [contactButton]
+  })
 
   user.isFreeAgent = true
   user.freeAgentMessageId = msg.id
+  user.freeAgentExpiresAt = new Date(Date.now() + FREE_AGENT_DURATION_MS)
   await user.save()
 
   return user
 }
-
-const FREE_AGENT_DURATION_MS = 14 * 24 * 60 * 60 * 1000
 
 async function syncFreeAgents({ client }) {
   const channel = await client.channels.fetch(channels.freeAgents.id)
@@ -210,6 +230,7 @@ async function syncFreeAgents({ client }) {
   const users = await User.find({})
 
   for (const user of users) {
+    // 1️⃣ Si tiene equipo → limpiar TODO
     if (user.teamId) {
       try {
         if (user.freeAgentMessageId) {
@@ -224,15 +245,15 @@ async function syncFreeAgents({ client }) {
               new EmbedBuilder()
                 .setTitle('Estado de agente libre actualizado')
                 .setDescription(
-                  `Tu estado de **agente libre** ha sido retirado automáticamente, ya que actualmente formas parte de un equipo.\n\n` +
-                  `Por este motivo, tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.`
+                  `Tu estado de **agente libre** ha sido retirado automáticamente porque ahora formas parte de un equipo.\n\n` +
+                  `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.`
                 )
                 .setColor(0x2ECC71)
             ]
           })
         }
       } catch (e) {
-        console.error("Error al limpiar free agent tras entrar en equipo:", e)
+        console.error("Error limpiando free agent tras entrar en equipo:", e)
       }
 
       user.isFreeAgent = false
@@ -242,20 +263,22 @@ async function syncFreeAgents({ client }) {
       continue
     }
 
-    if (user.isFreeAgent === false) continue
-    if (!user.freeAgentExpiresAt) {
-      user.freeAgentExpiresAt = new Date(Date.now() + FREE_AGENT_DURATION_MS)
+    // 2️⃣ Guard: freeAgent activo sin expiresAt → expirar YA
+    if (user.isFreeAgent && !user.freeAgentExpiresAt) {
+      user.freeAgentExpiresAt = new Date()
       await user.save()
     }
+
+    if (!user.isFreeAgent) continue
+
+    // 3️⃣ Expirado
     if (user.freeAgentExpiresAt <= new Date()) {
       try {
-        // Eliminar mensaje del canal
         if (user.freeAgentMessageId) {
           const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
           if (msg) await msg.delete()
         }
 
-        // MD de expiración con botón de renovación
         const dm = await client.users.fetch(user.discordId).catch(() => null)
         if (dm) {
           const renewButton = new ActionRowBuilder().addComponents(
@@ -271,9 +294,9 @@ async function syncFreeAgents({ client }) {
               new EmbedBuilder()
                 .setTitle('Estado de agente libre expirado')
                 .setDescription(
-                  `Tu estado de **agente libre** ha expirado automáticamente tras permanecer activo durante **14 días** sin unirte a ningún equipo.\n\n` +
-                  `Como consecuencia, tu anuncio ha sido retirado del canal <#${channels.freeAgents.id}>.\n\n` +
-                  `*Si deseas volver a aparecer como agente libre, puedes solicitar la renovación utilizando el botón inferior.*`
+                  `Tu estado de **agente libre** ha expirado tras **7 días** sin unirte a ningún equipo.\n\n` +
+                  `Tu anuncio ha sido eliminado del canal <#${channels.freeAgents.id}>.\n\n` +
+                  `Puedes renovarlo usando el botón inferior.`
                 )
                 .setColor(0xE67E22)
             ],
@@ -291,6 +314,7 @@ async function syncFreeAgents({ client }) {
       continue
     }
 
+    // 4️⃣ Sigue activo → sync embed
     let data = null
     if (user.brawlId) {
       data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
