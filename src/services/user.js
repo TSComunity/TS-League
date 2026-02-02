@@ -248,8 +248,6 @@ async function syncFreeAgents({ client }) {
      * 1️⃣ USER CON EQUIPO → SOLO SI ERA FREE AGENT
      * ================================================= */
     if (user.teamId) {
-      const wasFreeAgent = user.isFreeAgent || user.freeAgentMessageId
-      if (!wasFreeAgent) continue
 
       // Eliminar mensaje
       if (user.freeAgentMessageId) {
