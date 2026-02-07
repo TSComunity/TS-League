@@ -234,34 +234,55 @@ async function sendDM(client, discordId, payload) {
   }
 }
 
+const logFA = (msg, extra = {}) => {
+  console.log(
+    `[FreeAgentsSync] ${msg}`,
+    Object.keys(extra).length ? extra : ''
+  )
+}
+
 async function syncFreeAgents({ client }) {
+  logFA('Iniciando sincronización de agentes libres')
+
   const channel = await client.channels.fetch(channels.freeAgents.id)
   if (!channel || !channel.isTextBased()) {
     throw new Error("Canal de agentes libres no encontrado o no es de texto.")
   }
 
   const users = await User.find({})
+  logFA(`Usuarios cargados`, { total: users.length })
 
   for (const user of users) {
-    if (!user.isFreeAgent) continue
+
+    if (!user.isFreeAgent) {
+      logFA('⏭️ Usuario no es free agent, skip', { discordId: user.discordId })
+      continue
+    }
+
     /* =================================================
      * 1️⃣ USER CON EQUIPO → SOLO SI ERA FREE AGENT
      * ================================================= */
     if (user.teamId) {
+      logFA('🛑 Free agent con equipo → limpiando estado', {
+        discordId: user.discordId,
+        teamId: user.teamId
+      })
 
-      // Eliminar mensaje
       if (user.freeAgentMessageId) {
         const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
-        if (msg) await msg.delete()
+        if (msg) {
+          await msg.delete()
+          logFA('🗑️ Mensaje eliminado', { messageId: user.freeAgentMessageId })
+        }
       }
 
-      // Limpiar estado
       user.isFreeAgent = false
       user.freeAgentMessageId = null
       user.freeAgentExpiresAt = null
       await user.save()
 
-      // MD opcional
+      logFA('✅ Estado free agent limpiado', { discordId: user.discordId })
+
       await sendDM(client, user.discordId, {
         embeds: [
           new EmbedBuilder()
@@ -272,7 +293,9 @@ async function syncFreeAgents({ client }) {
             )
             .setColor(0x2ECC71)
         ]
-      })
+      }).catch(() =>
+        logFA('⚠️ No se pudo enviar DM', { discordId: user.discordId })
+      )
 
       continue
     }
@@ -281,6 +304,10 @@ async function syncFreeAgents({ client }) {
      * 2️⃣ GUARD: FREE AGENT ACTIVO SIN expiresAt → EXPIRA YA
      * ====================================================== */
     if (user.isFreeAgent && !user.freeAgentExpiresAt) {
+      logFA('⚠️ Free agent sin expiresAt → forzando expiración', {
+        discordId: user.discordId
+      })
+
       user.freeAgentExpiresAt = new Date()
       await user.save()
     }
@@ -289,19 +316,26 @@ async function syncFreeAgents({ client }) {
      * 3️⃣ FREE AGENT EXPIRADO
      * ========================= */
     if (user.freeAgentExpiresAt <= new Date()) {
-      // Eliminar mensaje
+      logFA('⌛ Free agent expirado', {
+        discordId: user.discordId,
+        expiredAt: user.freeAgentExpiresAt
+      })
+
       if (user.freeAgentMessageId) {
         const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
-        if (msg) await msg.delete()
+        if (msg) {
+          await msg.delete()
+          logFA('🗑️ Mensaje eliminado por expiración', {
+            messageId: user.freeAgentMessageId
+          })
+        }
       }
 
-      // Limpiar estado
       user.isFreeAgent = false
       user.freeAgentMessageId = null
       user.freeAgentExpiresAt = null
       await user.save()
 
-      // MD opcional
       const renewButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('userRenewFreeAgent')
@@ -322,7 +356,11 @@ async function syncFreeAgents({ client }) {
             .setColor(0xE67E22)
         ],
         components: [renewButton]
-      })
+      }).catch(() =>
+        logFA('⚠️ No se pudo enviar DM de expiración', {
+          discordId: user.discordId
+        })
+      )
 
       continue
     }
@@ -330,9 +368,19 @@ async function syncFreeAgents({ client }) {
     /* ==============================
      * 4️⃣ FREE AGENT ACTIVO → SYNC
      * ============================== */
+    logFA('🔄 Free agent activo → sincronizando embed', {
+      discordId: user.discordId
+    })
+
     let data = null
     if (user.brawlId) {
-      data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
+      data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => {
+        logFA('⚠️ Error obteniendo datos de Brawl', {
+          discordId: user.discordId,
+          brawlId: user.brawlId
+        })
+        return null
+      })
     }
 
     const embed = await getUserStatsEmbed({
@@ -356,12 +404,22 @@ async function syncFreeAgents({ client }) {
       })
       user.freeAgentMessageId = msg.id
       await user.save()
+
+      logFA('🆕 Mensaje creado', {
+        discordId: user.discordId,
+        messageId: msg.id
+      })
     } else {
       const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
       if (msg) {
         await msg.edit({
           embeds: [embed],
           components: [contactButton]
+        })
+
+        logFA('✏️ Mensaje actualizado', {
+          discordId: user.discordId,
+          messageId: user.freeAgentMessageId
         })
       } else {
         const newMsg = await channel.send({
@@ -370,9 +428,17 @@ async function syncFreeAgents({ client }) {
         })
         user.freeAgentMessageId = newMsg.id
         await user.save()
+
+        logFA('♻️ Mensaje perdido → recreado', {
+          discordId: user.discordId,
+          messageId: newMsg.id
+        })
       }
     }
   }
+
+  logFA('✅ Sincronización finalizada')
 }
+
 
 module.exports = { checkUserIsVerified, verifyUser, addPingRoleToUser, updateUsersPingRole, getUserDisplayName, toggleFreeAgent, syncFreeAgents }
